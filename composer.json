@@ -1,5 +1,5 @@
 {
-    "name": "yii2-job/yii2-job",
+    "name": "kaikaige/yii2-job",
     "description": "配合gocron改造的任务管理器",
     "type": "yii2-extension",
     "keywords": ["yii2","extension"],

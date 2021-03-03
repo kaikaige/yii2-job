@@ -10,13 +10,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist yii2-job/yii2-job "*"
+php composer.phar require --prefer-dist kaikaige/yii2-job "*"
 ```
 
 or add
 
 ```
-"yii2-job/yii2-job": "*"
+"kaikaige/yii2-job": "*"
 ```
 
 to the require section of your `composer.json` file.
