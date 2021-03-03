@@ -1,0 +1,21 @@
+{
+    "name": "yii2-job/yii2-job",
+    "description": "配合gocron改造的任务管理器",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension"],
+    "license": "BSD-4-Clause",
+    "authors": [
+        {
+            "name": "kai.gao",
+            "email": "396929174@qq.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "~2.0.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "kaikaige\\job\\": ""
+        }
+    }
+}
