@@ -44,7 +44,7 @@ class JobClient extends Component
 
     public function hostList()
     {
-        $this->httpClient->get('host/all')->send()->getData();
+        $res = $this->httpClient->get('host/all')->send()->getData();
         if ($res['code'] != 0) {
             throw new \Exception($res['message']);
         }
@@ -56,9 +56,18 @@ class JobClient extends Component
         return $this->httpClient->post('host/store', $data)->send()->getData();
     }
 
+    public function hostDetail($host_id)
+    {
+        $data = $this->httpClient->get('host/'.$host_id)->send()->getData();
+        if (!$data['data']) {
+            throw new \Exception('找不到主机');
+        }
+        return $data['data'];
+    }
+
     public function hostTest($host_id)
     {
-        return $this->httpClient->post('host/ping/'.$host_id)->send()->getData();
+        return $this->httpClient->get('host/ping/'.$host_id)->send()->getData();
     }
 
     public function hostDelete($host_id)

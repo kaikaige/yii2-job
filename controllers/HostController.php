@@ -1,20 +1,18 @@
 <?php
 namespace kaikaige\job\controllers;
 
-use kaikaige\job\forms\job\CreateForm;
-use kaikaige\job\forms\job\PushJobForm;
+use kaikaige\job\forms\host\CreateForm;
 
-class JobController extends Controller
+class HostController extends Controller
 {
     public function actionIndex()
     {
         if (\Yii::$app->request->isAjax) {
-            $data = $this->jobClient->jobList();
-            $data['code'] = 0;
-            foreach ($data['data'] as $key=>$job) {
-                $data['data'][$key]['run_mode'] = $job['run_mode'] == 1 ? '计划任务' : '常驻任务';
-            }
-            return $this->asJson($data);
+            $data = $this->jobClient->hostList();
+//            foreach ($data['data'] as $key=>$job) {
+//                $data['data'][$key]['run_mode'] = $job['run_mode'] == 1 ? '计划任务' : '常驻任务';
+//            }
+            return $this->asJson(['data'=>$data, 'code'=>0]);
         }
         return $this->render('index');
     }
@@ -26,7 +24,6 @@ class JobController extends Controller
             $model->load(\Yii::$app->request->post());
             return $this->asJson($model->run($this->jobClient));
         } else {
-            $model->flushHosts($this->jobClient);
             return $this->render('create', [
                 'model' => $model
             ]);
@@ -35,16 +32,13 @@ class JobController extends Controller
 
     public function actionUpdate($id)
     {
-        $res = $this->dq->topicView($id);
-        if (!$res->isOk) {
-            throw new \Exception($res->getContent());
-        }
         $model = new CreateForm();
         if (\Yii::$app->request->isPost) {
             $model->load(\Yii::$app->request->post());
-            return $this->asJson($model->run($this->dq));
+            return $this->asJson($model->run($this->jobClient));
         } else {
-            $model->setAttributes($res->getData());
+            $data = $this->jobClient->hostDetail($id);
+            $model->setAttributes($data);
             return $this->render('create', [
                 'model' => $model
             ]);
@@ -56,25 +50,16 @@ class JobController extends Controller
         return $this->asJson($this->dq->topicDelete($id));
     }
 
+    public function actionPing($id)
+    {
+        return $this->asJson($this->jobClient->hostTest($id));
+    }
+
     public function actionView($id)
     {
         $res = $this->dq->topicView($id);
         if ($res['code'] == 200) {
             return $this->render('view', ['data' => $res['data']]);
-        }
-    }
-
-    public function actionPushJob($id)
-    {
-        $model = new PushJobForm();
-        if (\Yii::$app->request->isPost) {
-            $model->load(\Yii::$app->request->post());
-            return $this->asJson($model->run($this->dq));
-        } else {
-            $model->topic = $id;
-            return $this->render('push-job', [
-                'model' => $model
-            ]);
         }
     }
 }

@@ -10,15 +10,14 @@ use yii\helpers\Url;
 </script>
 <!-- 表格操作列 -->
 <script type="text/html" id="sys-log-table-bar">
-    <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="edit">立即执行</a>
-    <a class="layui-btn layui-btn-xs" lay-event="edit">执行日志</a>
     <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-xs" lay-event="ping">测试连接</a>
     <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
 </script>
 <!-- 表头操作 -->
 <script type="text/html" id="sys-log-table-tool-bar">
-    <a class="layui-btn layui-btn-sm" href="<?= Url::to(['host/index']) ?>">主机节点</a></i></a>
-    <a class="layui-btn layui-btn-sm" lay-event="create">添加任务</a></i></a>
+    <a class="layui-btn layui-btn-sm" href="<?= Url::to(['job/index']) ?>">任务管理</a></i></a>
+    <a class="layui-btn layui-btn-sm" lay-event="create">添加节点</a></i></a>
     <a class="layui-btn layui-btn-sm" lay-event="refresh"><i class="layui-icon layui-icon-refresh"></i>刷新</a>
 </script>
 <script type="text/html" id="tbaleStatus">
@@ -51,9 +50,9 @@ use yii\helpers\Url;
             cols: [[
                 {type: 'checkbox', fixed: 'left'},
                 {field:'id', align: 'center', title:'编号', sort: true},
-                {field:'name', align: 'center', title:'Name', sort: true},
-                {field:'run_mode', align: 'center', title:'运行模式', sort: true},
-                {field:'status', align: 'center', title:'状态', sort: true, templet: '#tbaleStatus'},
+                {field:'alias', align: 'center', title:'名称', sort: true},
+                {field:'name', align: 'center', title:'地址', sort: true},
+                {field:'port', align: 'center', title:'端口', sort: true},
                 {fixed: 'right',align: 'center', toolbar: '#sys-log-table-bar', title: '操作', minWidth: 270}
             ]]
         });
@@ -67,8 +66,14 @@ use yii\helpers\Url;
                 showEditModel(data)
             } else if (layEvent === 'del') { //删除
                 delModel(data,obj);
-            } else if (layEvent === 'job'){ //添加job
-                pushJobModel(data);
+            } else if (layEvent === 'ping'){ //添加job
+                $.get('<?= Url::to(['ping']) ?>' + '?id=' + data.id,function (data) {
+                    if (data.code == 0) {
+                        layer.msg(data.message, {icon:1});
+                    } else {
+                        layer.msg(data.message, {icon:2});
+                    }
+                })
             }
         });
 
@@ -142,23 +147,7 @@ use yii\helpers\Url;
                 maxmin: true,
                 resize: true,
                 area: ['50%', '70%'],
-                content: data ? '<?=Url::to(['update'])?>?id='+data.name : '<?= Url::to(['create'])?>',
-                end: function () {
-                    admin.getTempData('t-ok') && table.reload('sys-log-table');  // 成功刷新表格
-                }
-            });
-        }
-
-        //修改and添加
-        function pushJobModel(data) {
-            admin.putTempData('t-ok', false);
-            top.layui.admin.open({
-                type: 2,
-                title: '添加job',
-                maxmin: true,
-                resize: true,
-                area: ['50%', '70%'],
-                content: '<?=Url::to(['push-job'])?>?id='+data.name,
+                content: data ? '<?=Url::to(['update'])?>?id='+data.id : '<?= Url::to(['create'])?>',
                 end: function () {
                     admin.getTempData('t-ok') && table.reload('sys-log-table');  // 成功刷新表格
                 }
