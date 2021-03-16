@@ -2,6 +2,7 @@
 
 namespace kaikaige\job\forms\job;
 use kaikaige\job\components\JobClient;
+use yii\helpers\ArrayHelper;
 
 /**
  * Class CreateForm
@@ -33,7 +34,7 @@ class CreateForm extends \yii\base\Model
     {
         return [
             [['id', 'name', 'command'], 'required'],
-            [['run_mode', 'spec', 'host_id', 'thread_num', 'multi'], 'safe']
+            [['run_mode', 'spec', 'host_id', 'thread_num', 'multi', 'hosts'], 'safe']
         ];
     }
 
@@ -74,8 +75,14 @@ class CreateForm extends \yii\base\Model
     public function flushHosts($jobClient)
     {
         $items = $jobClient->hostList();
+        $hosts = $this->hosts ? ArrayHelper::getColumn($this->hosts, 'host_id') : [];
+        $this->hosts = [];
         foreach ($items as $host) {
-            $this->hosts[] = ['value'=>$host['id'], 'name'=>$host['name']];
+            if (!in_array($host['id'], $hosts)) {
+                $this->hosts[] = ['value'=>$host['id'], 'name'=>$host['alias']];
+            } else {
+                $this->hosts[] = ['value'=>$host['id'], 'name'=>$host['alias'], 'selected'=>true];
+            }
         }
         $this->hosts = json_encode($this->hosts);
     }

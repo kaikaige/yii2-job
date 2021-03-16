@@ -34,12 +34,18 @@ use backend\models\UserAdmin;
     <?php if($model->id) {?>
         <?= $form->field($model, 'id')->textInput(['maxlength' => true, 'disabled' => true]) ?>
     <?php } ?>
-    <?= $form->field($model, 'run_mode')->dropDownList([1=>'计划任务', 2=>'常驻脚本']) ?>
+    <?= $form->field($model, 'run_mode')->dropDownList([1=>'计划任务', 2=>'常驻任务'], ['disabled'=>true]) ?>
     <?= $form->field($model, 'name')->textInput(['maxlength' => true, 'placeholder' => '任务名称，不能重复']) ?>
     <?= $form->field($model, 'command')->textInput(['maxlength' => true, 'placeholder' => 'shell命令']) ?>
-    <?= $form->field($model, 'spec')->textInput(['maxlength' => true, 'placeholder' => '秒 分 时 日 月 周']) ?>
-    <?= $form->field($model, 'thread_num')->textInput(['maxlength' => true, 'placeholder' => '如果是常驻脚本，启动的进程数量']) ?>
-    <?= $form->field($model, 'multi')->dropDownList([1=>'多实例同时运行', 2=>'单例运行']) ?>
+    <?php if($model->run_mode == 1) { ?>
+        <?= $form->field($model, 'spec')->textInput(['maxlength' => true, 'placeholder' => '秒 分 时 日 月 周']) ?>
+        <?= $form->field($model, 'multi')->dropDownList([1=>'多实例同时运行', 0=>'单例运行']) ?>
+    <?php } else { ?>
+        <?= $form->field($model, 'thread_num')->textInput(['maxlength' => true, 'placeholder' => '如果是常驻脚本，启动的进程数量']) ?>
+        <?= $form->field($model, 'multi')->dropDownList([1=>'多实例同时运行'], ['disabled'=>true]) ?>
+    <?php } ?>
+
+
     <div class="layui-form-item">
         <label class="layui-form-label">
             主机</label><div class="layui-input-block">

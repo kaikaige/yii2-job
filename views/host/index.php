@@ -16,7 +16,7 @@ use yii\helpers\Url;
 </script>
 <!-- 表头操作 -->
 <script type="text/html" id="sys-log-table-tool-bar">
-    <a class="layui-btn layui-btn-sm" href="<?= Url::to(['job/index']) ?>">任务管理</a></i></a>
+    <a class="layui-btn layui-btn-sm" href="<?= Url::to(['job/index']) ?>">计划任务管理</a></i></a>
     <a class="layui-btn layui-btn-sm" lay-event="create">添加节点</a></i></a>
     <a class="layui-btn layui-btn-sm" lay-event="refresh"><i class="layui-icon layui-icon-refresh"></i>刷新</a>
 </script>

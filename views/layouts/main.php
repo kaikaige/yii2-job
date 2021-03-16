@@ -20,6 +20,11 @@ $baseUrl = $asset->baseUrl;
         <![endif]-->
         <?php $this->head() ?>
     </head>
+    <style>
+        .layui-table-cell {
+            height:auto;
+        }
+    </style>
     <!-- 加载动画 -->
     <div class="page-loading">
         <div class="ball-loader">

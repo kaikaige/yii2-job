@@ -28,20 +28,168 @@ class JobClient extends Component
         $this->httpClient = new Client(['baseUrl' => $this->addr]);
     }
 
-    public function jobList()
+    /**
+     * @des 任务列表
+     * @date 2021/3/15 14:35
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 14:35
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
+    public function jobList($runMode=1)
     {
-        $res = $this->httpClient->get('task')->send()->getData();
+        $res = $this->httpClient->get('task', ['run_mode'=>$runMode])->send()->getData();
         if ($res['code'] != 0) {
             throw new \Exception($res['message']);
         }
         return $res['data'];
     }
 
+    /**
+     * @des 任务详情
+     * @date 2021/3/16 10:34
+     * @author gaokai
+     * @modified_date 2021/3/16 10:34
+     * @modified_user gaokai
+     */
+    public function jobDetail($id)
+    {
+        return $this->httpClient->get('/task/'.$id)->send()->getData();
+    }
+
+    /**
+     * @des 添加任务
+     * @param $data
+     * @date 2021/3/15 14:34
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 14:34
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
     public function jobCreate($data)
     {
+        if ($data['multi'] == 0) {
+            $data['multi'] = 2;
+        }
         return $this->httpClient->post('task/store', $data)->send()->getData();
     }
 
+    /**
+     * @des 删除任务，其实是软删除
+     * @param $jobId
+     * @date 2021/3/15 14:34
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 14:34
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
+    public function jobDelete($jobId)
+    {
+        return $this->httpClient->post('task/remove/'.$jobId)->send()->getData();
+    }
+
+    /**
+     * @des 禁用任务
+     * @param $jobId
+     * @date 2021/3/15 14:26
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 14:26
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
+    public function jobDisable($jobId)
+    {
+        return $this->httpClient->post('task/disable/'.$jobId)->send()->getData();
+    }
+
+    /**
+     * @des 激活任务
+     * @param $jobId
+     * @date 2021/3/15 14:26
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 14:26
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
+    public function jobEnable($jobId)
+    {
+        return $this->httpClient->post('task/enable/'.$jobId)->send()->getData();
+    }
+
+    /**
+     * @des 激活任务
+     * @param $jobId
+     * @date 2021/3/15 14:26
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 14:26
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
+    public function jobRun($jobId)
+    {
+        return $this->httpClient->get('task/run/'.$jobId)->send()->getData();
+    }
+
+    /**
+     * @des 任务执行日志
+     * @param $jobId
+     * @date 2021/3/15 15:10
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 15:10
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
+    public function jobLogList($jobId, $page=1, $pageSize=20)
+    {
+        return $this->httpClient->get('task/log', ['task_id'=>$jobId, 'page_size'=>$pageSize, 'page'=>$page])->send()->getData();
+    }
+
+    /**
+     * @des 任务执行日志
+     * @param $jobId
+     * @date 2021/3/15 15:10
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 15:10
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
+    public function jobLogStop($logId, $taskId)
+    {
+        return $this->httpClient->post('task/log/stop', ['id'=>$logId, 'task_id'=>$taskId])->send()->getData();
+    }
+
+    /**
+     * @des 任务执行日志
+     * @param $jobId
+     * @date 2021/3/15 15:10
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 15:10
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
+    public function jobLogClear($taskId)
+    {
+        return $this->httpClient->post('task/log/clear', ['task_id'=>$taskId])->send()->getData();
+    }
+
+    /**
+     * @des 节点列表
+     * @date 2021/3/15 14:33
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 14:33
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
     public function hostList()
     {
         $res = $this->httpClient->get('host/all')->send()->getData();
@@ -51,11 +199,31 @@ class JobClient extends Component
         return $res['data'];
     }
 
+    /**
+     * @des 添加节点
+     * @param $data
+     * @date 2021/3/15 14:33
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 14:33
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
     public function hostCreate($data)
     {
         return $this->httpClient->post('host/store', $data)->send()->getData();
     }
 
+    /**
+     * @des 节点详情
+     * @param $host_id
+     * @date 2021/3/15 14:33
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 14:33
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
     public function hostDetail($host_id)
     {
         $data = $this->httpClient->get('host/'.$host_id)->send()->getData();
@@ -65,11 +233,31 @@ class JobClient extends Component
         return $data['data'];
     }
 
+    /**
+     * @des 测试节点连通性
+     * @param $host_id
+     * @date 2021/3/15 14:33
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 14:33
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
     public function hostTest($host_id)
     {
         return $this->httpClient->get('host/ping/'.$host_id)->send()->getData();
     }
 
+    /**
+     * @des 删除节点
+     * @param $host_id
+     * @date 2021/3/15 14:34
+     * @author gaokai
+     * @return mixed
+     * @modified_date 2021/3/15 14:34
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
     public function hostDelete($host_id)
     {
         return $this->httpClient->post('host/remove/'.$host_id)->send()->getData();

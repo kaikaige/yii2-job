@@ -3,27 +3,20 @@ use yii\helpers\Url;
 ?>
 
 <table class="layui-table" id="sys-log-table" lay-filter="sys-log-table"></table>
-
 <!-- 表格状态列 -->
 <script type="text/html" id="table-status">
     <input type="checkbox" lay-filter="ckStatus" value="{{d.id}}" lay-skin="switch" lay-text="可用|禁用" {{d.is_deleted==0?'checked':''}}/>
 </script>
 <!-- 表格操作列 -->
 <script type="text/html" id="sys-log-table-bar">
-    <a class="layui-btn layui-btn-xs" lay-event="run">立即执行</a>
-    <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="log">执行日志</a>
-    <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">编辑</a>
-    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    {{#  if(d.status == 1){ }}
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="stop">停止任务</a>
+    {{#  } }}
+    <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="result">查看结果</a>
 </script>
 <!-- 表头操作 -->
 <script type="text/html" id="sys-log-table-tool-bar">
-    <?php if(Yii::$app->request->get('run_mode', 1) == 1) {?>
-    <a class="layui-btn layui-btn-sm" href="<?= Url::to(['index', 'run_mode'=>2]) ?>">常驻任务管理</a></i></a>
-    <?php } else {?>
-    <a class="layui-btn layui-btn-sm" href="<?= Url::to(['index', 'run_mode'=>1]) ?>">计划任务管理</a></i></a>
-    <?php } ?>
-    <a class="layui-btn layui-btn-sm" href="<?= Url::to(['host/index']) ?>">主机管理</a></i></a>
-    <a class="layui-btn layui-btn-sm" lay-event="create">添加任务</a></i></a>
+    <a class="layui-btn layui-btn-danger layui-btn-sm" lay-event="clear">清空日志</a>
     <a class="layui-btn layui-btn-sm" lay-event="refresh"><i class="layui-icon layui-icon-refresh"></i>刷新</a>
 </script>
 <script type="text/html" id="tbaleStatus">
@@ -31,7 +24,7 @@ use yii\helpers\Url;
            {{d.status==1?'checked':''}}/>
 </script>
 <script>
-    layui.use(['layer', 'form', 'table','tableX', 'laydate'], function () {
+    layui.use(['layer', 'form', 'table','tableX', 'laydate', 'laytpl'], function () {
         var $ = layui.jquery;
         var layer = layui.layer;
         var form = layui.form;
@@ -45,21 +38,23 @@ use yii\helpers\Url;
         // 渲染表格
         tableX.render({
             elem: '#sys-log-table',
-            url: '<?=Url::to(['index', 'run_mode'=>Yii::$app->request->get('run_mode', 1)])?>',
+            url: '<?=Url::to(["log", "id"=>Yii::$app->request->get("id")])?>',
             toolbar: '#sys-log-table-tool-bar',
             method:'get',
-            limit:10000,
+            limit:20,
             defaultToolbar: ['filter'],
             where:{'init_data':'get-request'}, //用于判断是否为get的请求
-            page: false,
+            page: true,
             cellMinWidth: 100,
             cols: [[
                 {type: 'checkbox', fixed: 'left'},
                 {field:'id', align: 'center', title:'编号', sort: true},
                 {field:'name', align: 'center', title:'Name', sort: true},
-                {field:'run_mode', align: 'center', title:'运行模式', sort: true},
-                {field:'next_run_time', align: 'center', title:'下次执行时间', sort: true},
-                {field:'status', align: 'center', title:'状态', sort: true, templet: '#tbaleStatus'},
+                {field:'status_text', align: 'center', title:'状态', sort: true},
+                {field:'hostname', align: 'center', title:'执行节点', templet:function (d) {
+                    return d.hostname
+                }},
+                {field:'total_time', align: 'center', title:'执行时间', sort: true},
                 {fixed: 'right',align: 'center', toolbar: '#sys-log-table-bar', title: '操作', minWidth: 270}
             ]]
         });
@@ -68,40 +63,51 @@ use yii\helpers\Url;
         table.on('tool(sys-log-table)', function (obj) {
             var data = obj.data; //获得当前行数据
             var layEvent = obj.event; //获得 lay-event 对应的值
-
-            if (layEvent === 'edit') { //修改
-                showEditModel(data)
-            } else if (layEvent === 'del') { //删除
-                delModel(data,obj);
-            } else if (layEvent === 'job'){ //添加job
-                pushJobModel(data);
-            } else if (layEvent === 'run') { //运行任务
-                layer.confirm('确定执行任务？', function(index){
-                    var url = "<?= Url::to(['job/run'])?>" + "?id=" + data.id
+            if (layEvent === 'result') { //修改
+                var html = '<div style="background-color: #4c4c4c; margin:15px; padding:20px; color:white;"><pre>' + data.command + '</pre></div>'
+                if (data.result) {
+                    html += '<div style="background-color: #4c4c4c; margin:15px; padding:20px; color:white;"><pre>' + data.result + '</pre></div>'
+                }
+                top.layui.admin.open({
+                    type: 1,
+                    title: '执行结果',
+                    maxmin: true,
+                    resize: true,
+                    offset: 'auto',
+                    area: ['40%', '40%'],
+                    content:html,
+                });
+            } else if (layEvent === 'stop') { //运行任务
+                layer.confirm('确定停止任务？', function(index){
+                    var url = "<?= Url::to(['job/stop'])?>" + "?id=" + data.id + "&taskId=" + data.task_id
                     $.post(url, {'_csrf-backend':_csrf}, function(res) {
                         if (res.code != 0) {
                             layer.msg(res.message, {icon: 2})
                         } else {
                             layer.msg(res.message, {icon: 1})
+                            table.reload('sys-log-table');
                         }
                     })
                 });
             } else if (layEvent === 'log') { //执行日志
-                top.layui.admin.open({
-                    type: 2,
-                    title: '执行日志',
-                    maxmin: true,
-                    resize: true,
-                    area: ['80%', '70%'],
-                    content: '<?=Url::to(['job/log'])?>?id='+data.id,
-                });
+                window.location.href = "<?= Url::to(['job/log'])?>" + "?id=" + data.id
             }
         });
 
         //监听搜索、添加、刷新
         table.on('toolbar(sys-log-table)', function(obj) {
             var layEvent = obj.event
-            if (layEvent === 'search') { //搜索
+            if (layEvent === 'clear') { //添加
+                layer.confirm('请确认清空日志', function(index){
+                    layer.close(index);
+                    //向服务端发送删除指令
+                    var url = "<?= Url::to(['clear-log', 'id'=>\Yii::$app->request->get('id')])?>";
+                    $.post(url,{'_csrf-backend':_csrf},function (data) {
+                        layer.msg("清除成功！");
+                        table.reload('sys-log-table');
+                    })
+                });
+            } else if (layEvent === 'search') { //搜索
                 //监听搜索
                 var searchForm = form.val("searchForm")
                 table.reload('sys-log-table', {
@@ -120,7 +126,6 @@ use yii\helpers\Url;
             let params = {
                 value:obj.value,
                 attribute:obj.field,
-                '_csrf-backend':_csrf,
                 //'".\Yii::$app->request->csrfParam."':'".\Yii::$app->request->getCsrfToken()."'
             }
             $.post('<?= Url::to(['update-attribute']) ?>?id='+obj.data.id, params,function(data) {
@@ -131,7 +136,7 @@ use yii\helpers\Url;
         form.on('switch(ckStatus)', function (obj) {
             let params = {
                 value:obj.elem.checked ? 0 : 1,
-                '_csrf-backend':_csrf,
+                attribute: 'is_deleted',
             }
             $.post('<?= Url::to(['switch-status']) ?>?id='+obj.value, params,function(data) {
                 layer.msg('修改成功', {icon:1})
@@ -160,7 +165,7 @@ use yii\helpers\Url;
                 maxmin: true,
                 resize: true,
                 area: ['50%', '70%'],
-                content: data ? '<?=Url::to(['update'])?>?id='+data.id : '<?= Url::to(['create', 'run_mode'=>Yii::$app->request->get('run_mode', 1)])?>',
+                content: data ? '<?=Url::to(['update'])?>?id='+data.id : '<?= Url::to(['create'])?>',
                 end: function () {
                     admin.getTempData('t-ok') && table.reload('sys-log-table');  // 成功刷新表格
                 }
