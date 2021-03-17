@@ -1,7 +1,7 @@
 <?php
 /** @var $asset */
 /** @var $this  \yii\web\View */
-$asset = \kaikaige\layui\asset\LayuiAsset::register($this);
+$asset = \kaikaige\easyweb\LayuiAsset::register($this);
 $baseUrl = $asset->baseUrl;
 ?>
 <?php $this->beginPage() ?>
