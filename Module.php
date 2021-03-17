@@ -3,6 +3,7 @@ namespace kaikaige\job;
 
 use kaikaige\job\components\JobClient;
 use Yii;
+use yii\helpers\Url;
 use yii\httpclient\Client;
 
 class Module extends \yii\base\Module
@@ -16,6 +17,8 @@ class Module extends \yii\base\Module
      * @var JobClient
      */
     public $client;
+
+    public $controllerNamespace = 'kaikaige\job\controllers';
 
     public function init()
     {

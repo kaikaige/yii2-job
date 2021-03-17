@@ -28,6 +28,31 @@ class JobClient extends Component
         $this->httpClient = new Client(['baseUrl' => $this->addr]);
     }
 
+    public function initSystem($data)
+    {
+        return $this->httpClient->post('install/store', $data)->send()->getData();
+    }
+
+    /**
+     * @des 是否初始化
+     * @date 2021/3/17 16:06
+     * @author gaokai
+     * @return bool
+     * @modified_date 2021/3/17 16:06
+     * @modified_user gaokai
+     * @throws \yii\httpclient\Exception
+     */
+    public function isInit()
+    {
+        $res = $this->httpClient->get('install/status')->send();
+        if (!$res->isOk) {
+            throw new \Exception($res->getContent());
+        }
+        $data = $res->getData();
+        return $data['data'];
+    }
+
+
     /**
      * @des 任务列表
      * @date 2021/3/15 14:35
